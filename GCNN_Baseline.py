@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import metrics
 
 
 # ## Load Data from Text File and Reshape
@@ -69,11 +70,38 @@ for event_idx in range(ttbar_events):
 #print(edges.shape)
 
 
+# ## Split Dataset into Test and Train
+
+# *The only information passed to the GNN Model is the unique index of the jet. This makes splitting test and train dataset easy.*
+
+# In[4]:
+
+
+split = 0.8
+
+idx = np.arange(ttbar_len)
+
+split_idx = int(ttbar_len * split)
+
+train_n = int(ttbar_len * split)
+labels = labels.flatten()
+
+print(np.mean(labels))
+
+#x_train = idx[0:train_n]
+#y_train = labels[:train_n]
+
+x_train = idx[0:train_n]
+y_train = labels[0:train_n]
+x_test = idx[train_n:-1]
+y_test = labels[train_n:-1]
+
+
 # ## Constuct Graph Info 
 
 # *Node Features, Edges, and Edge Weights*
 
-# In[4]:
+# In[5]:
 
 
 #Construct graph info
@@ -86,41 +114,21 @@ edge_weights = tf.ones(shape=edges.shape[1])
 
 # Create a node features array of shape [num_nodes, num_features].
 node_features = ttbar_dataset.reshape(ttbar_len, ttbar_feat)
-node_features = tf.cast(node_features[:,0:3], dtype=tf.dtypes.float32
-)
+node_features = tf.cast(node_features[:,0:3], dtype=tf.dtypes.float32)
+
+#node_features_train = node_features[0:train_n,:]
+#node_features_train = tf.cast(node_features_train[:,0:3], dtype=tf.dtypes.float32)
+
+#node_features_test = node_features[train_n:-1,:]
+#node_features_test = tf.cast(node_features_test[:,0:3], dtype=tf.dtypes.float32)
 
 # Create graph info tuple with node_features, edges, and edge_weights.
 graph_info = (node_features, edges, edge_weights)
+#graph_info_train = (node_features_train, edges, edge_weights)
+#graph_info_test = (node_features_test, edges, edge_weights)
 
 print("Edges shape:", edges.shape)
 print("Nodes shape:", node_features.shape)
-
-
-# ## Split Dataset into Test and Train
-
-# *The only information passed to the GNN Model is the unique index of the jet. This makes splitting test and train dataset easy.*
-
-# In[5]:
-
-
-split = 0.8
-
-idx = np.arange(ttbar_len)
-
-train_n = int(ttbar_len * 0.8)
-labels = labels.flatten()
-
-print(np.mean(labels))
-
-x_train = idx[:]
-y_train = labels[:]
-
-
-
-#x_train = idx[0:train_n]
-#y_train = labels[0:train_n]
-#x_test = idx[train_n:-1]
-#y_test = labels[train_n:-1]
 
 
 # ## Create Simple, Configurable Feed Forward Network
@@ -323,7 +331,7 @@ class GNNNodeClassifier(tf.keras.Model):
         # Create a postprocess layer.
         self.postprocess = create_ffn(hidden_units, dropout_rate, name="postprocess")
         # Create a compute logits layer.
-        self.compute_logits = layers.Dense(units=num_classes, name="logits")
+        self.compute_logits = layers.Dense(units=num_classes, name="logits", activation="sigmoid")
 
     def call(self, input_node_indices):
         # Preprocess the node_features to produce node representations.
@@ -354,8 +362,8 @@ class GNNNodeClassifier(tf.keras.Model):
 hidden_units = [16, 16]
 learning_rate = 0.001
 dropout_rate = 0.25
-num_epochs = 20
-batch_size = 256
+num_epochs = 10
+batch_size = 1024
 num_classes = 1     # Binary Classification [0,1]
 
 gnn_model = GNNNodeClassifier(
@@ -382,7 +390,7 @@ def run_experiment(model, x_train, y_train):
     # Compile the model.
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
-        loss=keras.losses.BinaryCrossentropy(from_logits=True),
+        loss=keras.losses.BinaryCrossentropy(from_logits=False),
         metrics=[keras.metrics.BinaryAccuracy(name="acc")],
     )
     # Create an early stopping callback.
@@ -420,13 +428,13 @@ def display_learning_curves(history):
 
     ax1.plot(history.history["loss"])
     ax1.plot(history.history["val_loss"])
-    ax1.legend(["train", "test"], loc="upper right")
+    ax1.legend(["train", "validation"], loc="upper right")
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
 
     ax2.plot(history.history["acc"])
     ax2.plot(history.history["val_acc"])
-    ax2.legend(["train", "test"], loc="upper right")
+    ax2.legend(["train", "validation"], loc="upper right")
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy")
     plt.show()
@@ -436,4 +444,42 @@ def display_learning_curves(history):
 
 
 display_learning_curves(history)
+
+
+# In[27]:
+
+
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+from sklearn.metrics import f1_score
+
+y_pred = gnn_model.predict(x_test).ravel()
+y_true = y_test
+
+
+# In[32]:
+
+
+fpr_keras, tpr_keras, thresholds_keras = roc_curve(y_true, y_pred)
+AUC = auc(fpr_keras, tpr_keras)
+plt.plot(fpr_keras, tpr_keras)
+plt.title("roc curve")
+plt.text(0.75,0.1,"AUC:"+str(round(AUC,6)))
+plt.show()
+
+
+# In[33]:
+
+
+threshhold = 0.5
+
+y_pred_threshold = np.copy(y_pred)
+y_pred_threshold[y_pred_threshold >= threshhold] = 1
+y_pred_threshold[y_pred_threshold < threshhold] = 0
+
+#print(y_pred_threshold[0:100])
+#print(np.mean(y_pred_threshold))
+
+F1 = f1_score(y_true, y_pred_threshold)
+print("F1 Score: ", F1)
 
