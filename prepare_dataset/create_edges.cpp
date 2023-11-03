@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <numeric>
 
 using namespace std;
 
@@ -32,18 +33,18 @@ int main(){
   vector<Edge> edges;
   vector<int> labels;
 
-  int jet1_idx = 0, jet2_idx = 0;
-
   for (int i=0;i<events;i++){
     for (int jet1_idx=0;jet1_idx<maxjets;jet1_idx++){
       if (data[i][jet1_idx][3] == "-1") labels.push_back(int(1));
 	  else labels.push_back(int(0));
-      for (int jet2_idx=jet1_idx+1;jet2_idx<maxjets;jet2_idx++);{
-	    //int p = data[i][jet1_idx][3].compare(data[i][jet2_idx][3]);
-		//cout << data[i][jet1_idx][3] <<" "<< data[i][jet2_idx][3] <<" "<< p <<" "<< labels[labels.size() -1] << endl;
-		if (data[i][jet1_idx][3].compare(data[i][jet2_idx][3])==0&&data[i][jet1_idx][3]!="0"){
+      for (int jet2_idx=jet1_idx+1;jet2_idx<maxjets;jet2_idx++){
+	    //cout << "jet1_idx " << jet1_idx << " jet2_idx " << jet2_idx << endl;
+		if (data[i][jet1_idx][3].compare(data[i][jet2_idx][3])==0&&data[i][jet1_idx][0]!="0"){
           edge.source = data[i][jet1_idx][4];
 		  edge.neighbor = data[i][jet2_idx][4];
+		  edges.push_back(edge);
+		  edge.source = data[i][jet2_idx][4];
+		  edge.neighbor = data[i][jet1_idx][4];
 		  edges.push_back(edge);
 		}
 	  }  
@@ -56,19 +57,17 @@ int main(){
   for (int i=0;i<edges.size();i++){
     edges_file << edges[i].source <<" "<< edges[i].neighbor << endl;
   }
-  /*
-  for (int i=0;i<split_idx;i++){
+
+  int stored_jets=0;
+  for (int i=0;i<events;i++){
     for (int j=0;j<maxjets;j++){
-      train_file << data[i][j][0] <<" "<< data[i][j][1] <<" "<< data[i][j][2] <<" "<< data[i][j][3] <<" "<< data[i][j][4] << endl;
+	  if (data[i][j][0]!="0"){
+      data_file << data[i][j][0] <<" "<< data[i][j][1] <<" "<< data[i][j][2] <<" "<< to_string(labels[i*maxjets+j]) <<" "<< data[i][j][4] << endl;
+	  stored_jets++;
+	  }
     }
   }
 
-  for (int i=split_idx;i<events;i++){
-    for (int j=0;j<maxjets;j++){
-      test_file << data[i][j][0] <<" "<< data[i][j][1] <<" "<< data[i][j][2] <<" "<< data[i][j][3] <<" "<< data[i][j][4] << endl;
-    }
-  }
-  */
-
-  cout << "Success: train.txt and test.txt have been written to disk." << endl;
+  cout << "Success: "+run_type+"_data.txt and "+run_type+"_edges.txt have been written to disk." << endl;
+  cout << "Mean of Labels: " << accumulate(labels.begin(), labels.end(), 0.0) / stored_jets << endl;
 }

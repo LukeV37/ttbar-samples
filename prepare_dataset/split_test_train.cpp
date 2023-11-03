@@ -21,8 +21,8 @@ int main(){
   int events = int(nlines / maxjets);
 
   //limit total number of events for debugging
-  events = 10;
-  nlines = events * maxjets;
+  //events = 10;
+  //nlines = events * maxjets;
 
   vector<vector<vector<string> > > data(events, vector<vector<string> >(maxjets, vector<string>(nvars)));
   data = get_data(FILENAME, nlines, maxjets, nvars);
