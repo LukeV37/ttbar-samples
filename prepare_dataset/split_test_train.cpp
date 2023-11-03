@@ -9,21 +9,22 @@
 using namespace std;
 
 int main(){
+  char FILENAME[] = "../../ZZ4nu_250k_output.txt";
+  int nvars = 4;
+
   // get total number of lines in file
-  char FILENAME[] = "/data/lvaughan/PU/ZZ4nu_250k_output.txt";
   int nlines = get_nlines(FILENAME);  
   //printf("Total number of lines: %d\n", nlines);
 
   //initlize data
   int maxjets = 100;
   int events = int(nlines / maxjets);
-  int nvars = 4;
 
   //limit total number of events for debugging
   events = 10;
   nlines = events * maxjets;
 
-  vector<vector<vector<string> > > data(events, vector<vector<string> >(maxjets, vector<string>(4)));
+  vector<vector<vector<string> > > data(events, vector<vector<string> >(maxjets, vector<string>(nvars)));
   data = get_data(FILENAME, nlines, maxjets, nvars);
   //cout << "Data Got" << endl;
   
@@ -91,6 +92,8 @@ int main(){
       test_file << data[i][j][0] <<" "<< data[i][j][1] <<" "<< data[i][j][2] <<" "<< data[i][j][3] <<" "<< data[i][j][4] << endl;
     }
   }      
+
+  cout << "Success: train.txt and test.txt have been written to disk." << endl;
 
   //edges will be implemented in separate script
 }
