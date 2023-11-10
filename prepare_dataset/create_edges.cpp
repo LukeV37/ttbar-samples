@@ -7,8 +7,8 @@
 using namespace std;
 
 int main(){
-  string run_type = "train";
-  char FILENAME[] = "./train.txt"; 
+  string run_type = "test";
+  char FILENAME[] = "./test.txt"; 
   int nvars = 5;
 
   // get total number of lines in file
@@ -35,11 +35,13 @@ int main(){
 
   for (int i=0;i<events;i++){
     for (int jet1_idx=0;jet1_idx<maxjets;jet1_idx++){
+	  //if (data[i][jet1_idx][4]=="4004") cout << "4004" << data[i][jet1_idx][0] << endl;
+	  //if (data[i][jet1_idx][4]=="4005") cout << "4005" << data[i][jet1_idx][0] << endl;
       if (data[i][jet1_idx][3] == "-1") labels.push_back(int(1));
 	  else labels.push_back(int(0));
       for (int jet2_idx=jet1_idx+1;jet2_idx<maxjets;jet2_idx++){
 	    //cout << "jet1_idx " << jet1_idx << " jet2_idx " << jet2_idx << endl;
-		if (data[i][jet1_idx][3].compare(data[i][jet2_idx][3])==0&&data[i][jet1_idx][0]!="0"){
+		if ((data[i][jet1_idx][3].compare(data[i][jet2_idx][3])==0)&&(data[i][jet1_idx][0]!="0")&&(data[i][jet2_idx][0]!="0")){
           edge.source = data[i][jet1_idx][4];
 		  edge.neighbor = data[i][jet2_idx][4];
 		  edges.push_back(edge);
