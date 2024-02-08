@@ -30,14 +30,16 @@ void d::Loop()
   vector<float> features(num_features); 
   int jet_label;
   int trk_label;
-  int trk_AssocToJet_ID=0;
+  int jet_ID=0;
   int Event_ID=0;
+  int trk_ID=0;
 
   // Initialize tree branches
   t1->Branch("features", &features);
   t1->Branch("jet_label", &jet_label);
   t1->Branch("trk_label", &trk_label);
-  t1->Branch("trk_AssocToJet_ID", &trk_AssocToJet_ID);
+  t1->Branch("trk_ID", &trk_ID);
+  t1->Branch("jet_ID", &jet_ID);
   t1->Branch("Event_ID", &Event_ID);
 
   Long64_t nentries = fChain->GetEntriesFast();
@@ -60,7 +62,6 @@ void d::Loop()
     h_njet->Fill(njet);
 
     if (njet==0) continue;
-    //trk_AssocToJet_ID = 0;  // Reset jet_ID after each event
 
     // Loop through jets
     for (int ijet = 0; ijet<njet; ++ijet) {
@@ -97,9 +98,11 @@ void d::Loop()
             jet_label = (*mc_puevent)[imc];  // jet label that defines jet vertex. -1=HS ; else=PU
             trk_label = (*mc_putype)[imc];   // trk label that defines PU. 1=
 
+            trk_ID++;       // Increment trk_ID after each jet
+
             t1->Fill();
         }
-        trk_AssocToJet_ID++;        // Increment jet_ID after each jet
+        jet_ID++;        // Increment jet_ID after each jet
     }
 
 
