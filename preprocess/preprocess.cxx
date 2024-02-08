@@ -1,4 +1,8 @@
 #include <vector>
+#include <iostream>
+#include <set>
+#include <time.h>
+#include <cstdlib>
 
 void preprocess(){
     // Declare pointer to the root file
@@ -7,36 +11,65 @@ void preprocess(){
     // Declare pointer to the TTree
     TTree *tree = (TTree*)file->Get("Refined_TTree");
 
-    // Declare local variables and have branches point to these local vars
+    // Declare local vars and have branches point to these local vars
     int num_feat = 19;
-    vector<float> *features = 0;     // Used to store training variables
-    int jet_label;                            // Pileup label for jet
-    int trk_label;                            // Pileup label for trk
-    int trk_ID;                               // Unique trk ID used for edges
-    int Event_ID;                             // Event ID used for balancing
+    vector<float> *features = 0;              // Used to store training variables
+    int j_label;                            // Pileup label for jet
+    int t_label;                            // Pileup label for trk
+    int t_ID;                               // Unique trk ID used for edges
+    int E_ID;                             // Event ID used for balancing
     tree->SetBranchAddress("features",&features);
-    tree->SetBranchAddress("jet_label",&jet_label);
-    tree->SetBranchAddress("trk_label",&trk_label);
-    tree->SetBranchAddress("trk_ID",&trk_ID);
-    tree->SetBranchAddress("Event_ID",&Event_ID);
+    tree->SetBranchAddress("jet_label",&j_label);
+    tree->SetBranchAddress("trk_label",&t_label);
+    tree->SetBranchAddress("trk_ID",&t_ID);
+    tree->SetBranchAddress("Event_ID",&E_ID);
 
-    // Read entries
+    // Declare c++ vectors
+    vector<vector<float> > feats;
+    vector<float> trk_feat;
+    vector<int> jet_label;
+    vector<int> trk_label;
+    vector<int> trk_ID;
+    vector<int> Event_ID;
+
+    // Read entries and store in c++ vectors for easy indexing
     for (int i=0;i<10;i++){
         tree->GetEntry(i);
-        cout << "jet label" << jet_label << endl;
-        
+        jet_label.push_back(j_label);
+        trk_label.push_back(t_label);
+        trk_ID.push_back(t_ID);
+        Event_ID.push_back(E_ID);
         //cout << "size" << features->size() << endl;
-        float *feat = features->data(); // MUST be done for every tree entry
+        float *dat = features->data(); // MUST be done for every tree entry
+        trk_feat.clear();              // Make sure to clean up after each track
         for(int j=0;j<num_feat;j++){
-            cout << feat[j] << endl;
+            trk_feat.push_back(*dat);
         }
+        feats.push_back(trk_feat);
     }
+
+    // Balance Events by cutting subgraphs
+    // loop through each event and store vertex labels of jets in that event
+    // generate random number to see if background vertex is cut
+    srand( time( 0 ) );         // Set the seed of srand() with the current time
+    float threshold = 0.7;      // Threshold which defines rejection of background
+    float rng = 0;              // A (psuedo)random number
+    set<int> s;                 // The set of all vertex labels in each event
+    vector<int> labels;         // An iterable of all vertex labels in each event
+    int unique_trk_ID = 1;      // Will be incremented to give tracks unique IDs
+
+    int E_current;  // Current Event Unique ID
+    int E_next;     // Next Event Unique ID
+    
+    E_current=Event_ID[0]; // Initilize current event ID
+
+    for (int i=0;i<trk_label.size();i++){
+        
+    }
+
 }
 
 // TO-DO:
-// -Write function to read each element and return vector
-// -For example, read jet_label reads only jet label and returns 1D vector
-// -Read features reads only features and returns 2D
 // -Then balance with vectors
 // -Then split
 // -Then convert to zero based indices

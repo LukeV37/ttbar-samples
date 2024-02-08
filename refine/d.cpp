@@ -23,30 +23,30 @@ void d::Loop()
 
   // Initialize output file and output tree
   TFile file("refined.root","recreate");
-  TTree *t1 = new TTree("Refined_TTree", "Preprocessed Features and Labels");
+  TTree *t1 = new TTree("Data", "Preprocessed Features and Labels");
 
   // Initialize feature vars, labels, and other info
   int num_features = 19;
   vector<float> features(num_features); 
   int jet_label;
   int trk_label;
-  int trk_ID=0;
+  int trk_AssocToJet_ID=0;
   int Event_ID=0;
 
   // Initialize tree branches
   t1->Branch("features", &features);
   t1->Branch("jet_label", &jet_label);
   t1->Branch("trk_label", &trk_label);
-  t1->Branch("trk_ID", &trk_ID);
+  t1->Branch("trk_AssocToJet_ID", &trk_AssocToJet_ID);
   t1->Branch("Event_ID", &Event_ID);
 
-  //Long64_t nentries = fChain->GetEntriesFast();
-  Long64_t nentries = 100000;
+  Long64_t nentries = fChain->GetEntriesFast();
+  //Long64_t nentries = 10000;
 
   for (Long64_t jentry=0; jentry<nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if (ientry < 0) break;
-    if (jentry && jentry%1000==0) cout << jentry << '\r'; cout.flush();
+    if (jentry && jentry%100==0) cout << jentry << " / " << nentries << '\r'; cout.flush();
     fChain->GetEntry(jentry);
 
     // skip events with badly reconstructed PV
@@ -96,8 +96,8 @@ void d::Loop()
             trk_label = (*mc_putype)[imc];
 
             t1->Fill();
-            trk_ID++;
         }
+        trk_AssocToJet_ID++;
     }
 
 

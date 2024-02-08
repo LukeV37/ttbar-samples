@@ -17,12 +17,12 @@ RLXX=$(LFLAGS) $(ROOTLIBS)
 SRC=d_ana.cpp d.cpp
 
 %.o: %.cpp d.h 
-	$(CPP) $(RCXX) -c $<
+	@$(CPP) $(RCXX) -c $<
 
 all: $(SRC:.cpp=.o)
-	$(LD) $(SRC:.cpp=.o) $(RLXX) -o d_ana
+	@$(LD) $(SRC:.cpp=.o) $(RLXX) -o d_ana
 
 clean:
-	rm -f *~ *.o
-	rm -f d_ana
-	rm -f a1.root
+	@rm -f *~ *.o
+	@rm -f d_ana
+	@rm -f a1.root
