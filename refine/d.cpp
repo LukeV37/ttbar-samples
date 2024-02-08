@@ -60,6 +60,7 @@ void d::Loop()
     h_njet->Fill(njet);
 
     if (njet==0) continue;
+    //trk_AssocToJet_ID = 0;  // Reset jet_ID after each event
 
     // Loop through jets
     for (int ijet = 0; ijet<njet; ++ijet) {
@@ -69,9 +70,10 @@ void d::Loop()
         features[2] = (*jet_phi)[ijet];
 
         // Loop through tracks
-        int ntr = (*jet_trackAssoc_index)[ijet].size();
+        int ntr = (*jet_trackAssoc_index)[ijet].size();         // Number of tracks associated with current jet. Note some jets do not have associated tracks.
         for (int itr = 0; itr<ntr; ++itr) {
-            int jtr = (*jet_trackAssoc_index)[ijet][itr];
+            int jtr = (*jet_trackAssoc_index)[ijet][itr];       // jtr is the index value that maps jet_var[jet_idx][trk_idx] -> trk_var[jtr]
+
             // Store track info
             features[3] = (*trk_pt)[jtr] / (*trk_charge)[jtr];
             features[4] = (*trk_eta)[jtr];
@@ -91,13 +93,13 @@ void d::Loop()
             features[18] = (*trk_nNextToInnermostPixelLayerHits)[jtr];
 
             // Store label info
-            int imc = (*trk_mc_index)[jtr];
-            jet_label = (*mc_puevent)[imc];
-            trk_label = (*mc_putype)[imc];
+            int imc = (*trk_mc_index)[jtr];  // I have no idea what imc is, but I trust sasha
+            jet_label = (*mc_puevent)[imc];  // jet label that defines jet vertex. -1=HS ; else=PU
+            trk_label = (*mc_putype)[imc];   // trk label that defines PU. 1=
 
             t1->Fill();
         }
-        trk_AssocToJet_ID++;
+        trk_AssocToJet_ID++;        // Increment jet_ID after each jet
     }
 
 
