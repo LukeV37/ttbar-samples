@@ -95,8 +95,14 @@ void d::Loop()
 
             // Store label info
             int imc = (*trk_mc_index)[jtr];  // I have no idea what imc is, but I trust sasha
-            jet_label = (*mc_puevent)[imc];  // jet label that defines jet vertex. -1=HS ; else=PU
-            trk_label = (*mc_putype)[imc];   // trk label that defines PU. 1=
+            if(imc<0){                       // Disregard "fake tracks" per sashas suggestion
+                jet_label=-999;
+                trk_label=-999;
+            }
+            else{
+                jet_label = (*mc_puevent)[imc];  // jet label that defines jet vertex. -1=HS ; else=PU
+                trk_label = (*mc_putype)[imc];   // trk label that defines PU. 1=PU ; 0 = Not PU
+            }
 
             trk_ID++;       // Increment trk_ID after each jet
 
