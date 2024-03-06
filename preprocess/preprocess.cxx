@@ -128,11 +128,26 @@ void preprocess(){
         // Iterate through jets and cut jets with low score in order to balance the dataset
         for (int k=0;k<Jets.size();k++){
             rng = ((float) rand() / (float) RAND_MAX);  // Generate a (psuedo)random number between 0 and 1
-            if (Jet_Score[k]<0.1){
+            if (Jet_Score[k]<0.05){
                 if (rng<0.99) cut_labels.push_back(Jets[k]);
             }
+            else if (Jet_Score[k]<0.1){
+                if (rng<0.94) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.15){
+                if (rng<0.85) cut_labels.push_back(Jets[k]);
+            }
             else if (Jet_Score[k]<0.2){
-                if (rng<0.6) cut_labels.push_back(Jets[k]);
+                if (rng<0.75) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.3){
+                if (rng<0.7) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.35){
+                if (rng<0.55) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.45){
+                if (rng<0.35) cut_labels.push_back(Jets[k]);
             }
             else continue;
         }
