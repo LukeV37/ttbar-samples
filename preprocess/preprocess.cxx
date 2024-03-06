@@ -6,9 +6,14 @@
 #include <algorithm>
 #include <cmath>
 
-void preprocess(){
+void preprocess(int type){
+    TString sample;
+
+    if (type==0) sample = "ttbar";
+    if (type==1) sample = "ZZ4nu";
+
     // Declare pointer to the root file
-    TFile *file = new TFile("../refine/refined_ttbar.root");
+    TFile *file = new TFile("../refine/refined_"+sample+".root");
     TH1* Jet_Score_h = new TH1D("Jet_Score","",20,0.,1.);
     TH1* Jet_Score_AFTER_h = new TH1D("Jet_Score_AFTER","",20,0.,1.);
     TH1* Balance_Score_h = new TH1D("Balance_Score","",20,0.,1.);
