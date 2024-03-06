@@ -4,11 +4,21 @@
 #include <time.h>
 #include <cstdlib>
 #include <algorithm>
+#include <cmath>
+
+float cut_threshold(float rng){
+    float threshold;
+    float lam = 28.957;
+    threshold = -1.0 / lam * log(1-rng);
+    return threshold;
+}
 
 void preprocess(){
     // Declare pointer to the root file
     TFile *file = new TFile("../refine/refined_ttbar.root");
     TH1* Jet_Score_h = new TH1D("Jet_Score","",20,0.,1.);
+    TH1* Jet_Score_AFTER_h = new TH1D("Jet_Score_AFTER","",20,0.,1.);
+    TH1* Balance_Score_h = new TH1D("Balance_Score","",20,0.,1.);
 
     // Declare pointer to the TTree
     TTree *tree = (TTree*)file->Get("Data");
@@ -125,7 +135,10 @@ void preprocess(){
         // Iterate through jets and cut jets with low score in order to balance the dataset
         for (int k=0;k<Jets.size();k++){
             rng = ((float) rand() / (float) RAND_MAX);  // Generate a (psuedo)random number between 0 and 1
-            if (Jet_Score[k]<rng){
+            balance_threshold = cut_threshold(rng);
+            //cout << balance_threshold << " " << Jet_Score[k] << endl;
+            Balance_Score_h->Fill(balance_threshold);
+            if (Jet_Score[k]<balance_threshold){
                 cut_labels.push_back(Jets[k]);
             }
         }
@@ -203,10 +216,60 @@ void preprocess(){
         if(Train==1&&Keep==1) t3->Fill();
         if(Test==1&&Keep==1) t4->Fill();
     }
+
     t2->Write();
     t3->Write();
     t4->Write();
+
     Jet_Score_h->Write();
+    Balance_Score_h->Write();
+
+    ///////////////////////////////////////////
+    /// The following is used for debugging ///
+    ///////////////////////////////////////////
+
+    // Recalulate Jet Score After Balancing
+    for(int i=0;i<num_Events;i++){
+        E_start_idx = E_end_idx;
+        E_current_ID = Event_ID[E_start_idx];
+        J.clear(); 
+        Jets.clear();
+        Jet_Score.clear();
+
+        // Figure out the Event_ending_idx using a while loop
+        while(E_current_ID == Event_ID[E_end_idx]){
+            E_end_idx++;
+        }
+
+        // Figure out how mant jets per event
+        for(int j=E_start_idx;j<E_end_idx;j++){
+            J.insert(jet_ID[j]);
+        }
+        Jets.assign(J.begin(),J.end());
+        for(int k=0;k<Jets.size();k++){
+            num_trk=0;                
+            Score=0;                 
+            for(int j=E_start_idx;j<E_end_idx;j++){
+                if(jet_ID[j]==Jets[k]&&isKept[j]==1){           
+                    num_trk++;                   
+                    if(jet_label[j]==-1) Score++;
+                }
+            }
+            Jet_Score_AFTER_h->Fill(float(Score)/float(num_trk));
+        }
+    }
+    int score_before_balance=0;
+    int score_after_balance=0;
+    for(int i=0;i<trk_label.size();i++){
+        if(trk_label[i]==0){
+            score_before_balance++;
+            if(isKept[i]==1) score_after_balance++;
+        }
+    }
+    cout << "Score Before Balance: " << (float) score_before_balance / (float)trk_label.size() << endl;
+    cout << "Score After Balance: " << (float) score_after_balance / (float)trk_label.size() << endl;
+
+    Jet_Score_AFTER_h->Write();
     cout << "Train " << float(reduce(isTrain.begin(),isTrain.end())) / (float) isTrain.size() << endl;
     cout << "Test " << (float) reduce(isTest.begin(),isTest.end()) / (float) isTest.size() << endl;
     cout << "Kept " << (float) reduce(isKept.begin(),isKept.end()) / (float) isKept.size() << endl;
