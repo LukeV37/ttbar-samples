@@ -269,6 +269,10 @@ void preprocess(){
     cout << "Score Before Balance: " << (float) score_before_balance / (float)trk_label.size() << endl;
     cout << "Score After Balance: " << (float) score_after_balance / (float)num_kept << endl;
 
+    cout << "Num trks Before Balance: " << trk_label.size() << endl;
+    cout << "Num trks After Balance: " << (float)num_kept << endl;
+    cout << "Reduction Factor: " << (float)num_kept / (float)trk_label.size()<< endl;
+
     Jet_Score_AFTER_h->Write();
     cout << "Train " << float(reduce(isTrain.begin(),isTrain.end())) / (float) isTrain.size() << endl;
     cout << "Test " << (float) reduce(isTest.begin(),isTest.end()) / (float) isTest.size() << endl;
