@@ -6,13 +6,6 @@
 #include <algorithm>
 #include <cmath>
 
-float cut_threshold(float rng){
-    float threshold;
-    float lam = 28.957;
-    threshold = -1.0 / lam * log(1-rng);
-    return threshold;
-}
-
 void preprocess(){
     // Declare pointer to the root file
     TFile *file = new TFile("../refine/refined_ttbar.root");
@@ -125,7 +118,7 @@ void preprocess(){
             for(int j=E_start_idx;j<E_end_idx;j++){     // Loop through all tracks
                 if(jet_ID[j]==Jets[k]){                 // Check if jet_ID matches current jet
                     num_trk++;                          // Count number of trks in each jet
-                    if(jet_label[j]==-1) Score++;       // If trk is HS add to the jet score
+                    if(trk_label[j]==0) Score++;       // If trk is HS add to the jet score
                 }
             }
             Jet_Score.push_back(float(Score)/float(num_trk)); // After looping through all trks append score
@@ -135,12 +128,13 @@ void preprocess(){
         // Iterate through jets and cut jets with low score in order to balance the dataset
         for (int k=0;k<Jets.size();k++){
             rng = ((float) rand() / (float) RAND_MAX);  // Generate a (psuedo)random number between 0 and 1
-            balance_threshold = cut_threshold(rng);
-            //cout << balance_threshold << " " << Jet_Score[k] << endl;
-            Balance_Score_h->Fill(balance_threshold);
-            if (Jet_Score[k]<balance_threshold){
-                cut_labels.push_back(Jets[k]);
+            if (Jet_Score[k]<0.1){
+                if (rng<0.99) cut_labels.push_back(Jets[k]);
             }
+            else if (Jet_Score[k]<0.2){
+                if (rng<0.6) cut_labels.push_back(Jets[k]);
+            }
+            else continue;
         }
 
         // Loop through tracks in the event, check if jet_lable is an element of cut list, if so set isKept to zero.
@@ -222,13 +216,14 @@ void preprocess(){
     t4->Write();
 
     Jet_Score_h->Write();
-    Balance_Score_h->Write();
 
     ///////////////////////////////////////////
     /// The following is used for debugging ///
     ///////////////////////////////////////////
 
     // Recalulate Jet Score After Balancing
+    E_start_idx=0;
+    E_end_idx=0;
     for(int i=0;i<num_Events;i++){
         E_start_idx = E_end_idx;
         E_current_ID = Event_ID[E_start_idx];
@@ -258,16 +253,21 @@ void preprocess(){
             Jet_Score_AFTER_h->Fill(float(Score)/float(num_trk));
         }
     }
+
     int score_before_balance=0;
     int score_after_balance=0;
+    int num_kept=0;
     for(int i=0;i<trk_label.size();i++){
+        if(isKept[i]==1) num_kept++;
         if(trk_label[i]==0){
             score_before_balance++;
-            if(isKept[i]==1) score_after_balance++;
+            if(isKept[i]==1){
+                score_after_balance++;
+            }
         }
     }
     cout << "Score Before Balance: " << (float) score_before_balance / (float)trk_label.size() << endl;
-    cout << "Score After Balance: " << (float) score_after_balance / (float)trk_label.size() << endl;
+    cout << "Score After Balance: " << (float) score_after_balance / (float)num_kept << endl;
 
     Jet_Score_AFTER_h->Write();
     cout << "Train " << float(reduce(isTrain.begin(),isTrain.end())) / (float) isTrain.size() << endl;
