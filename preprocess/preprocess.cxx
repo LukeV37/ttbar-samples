@@ -59,7 +59,7 @@ void preprocess(){
         float *dat = features->data(); // MUST be done for every tree entry
         trk_feat.clear();              // Make sure to clean up after each track
         for(int j=0;j<num_feat;j++){
-            trk_feat.push_back(*dat);
+            trk_feat.push_back(dat[j]);
         }
         feats.push_back(trk_feat);
     }
@@ -179,8 +179,8 @@ void preprocess(){
     // Now Write Required information back into root file
     TFile output("output.root","recreate");
     TTree *t2 = new TTree("Data", "Balanced and Split Dataset");
-    TTree *t3 = new TTree("Train", "Balanced and Split Dataset for Training");
-    TTree *t4 = new TTree("Test", "Balanced and Split Dataset for Testing");
+    TTree *t3 = new TTree("train", "Balanced and Split Dataset for Training");
+    TTree *t4 = new TTree("test", "Balanced and Split Dataset for Testing");
 
     int Keep;
     int Train;
@@ -295,9 +295,4 @@ void preprocess(){
 }
 
 // TO-DO:
-// -Balance based on jet_ID not jet_label
-// -In order to do this, must classify each jet_ID as PU or HS based on majority of jet_labels.
-// -Then convert to zero based indices
-// -Then create edges
-// -Then write features and edges to root file
-// -Then cout info into a text file
+// -Convert to zero based indices
