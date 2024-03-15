@@ -1,12 +1,17 @@
+#!/bin/bash
 run_ttbar=true
-run_ZZ4nu=true
+run_ZZ4nu=false
 
 cd ./refine
 make
 
 if [ $run_ttbar = true ] ; then
     echo "Refining ttbar..."
-    ./d_ana ../data/user.khanov.mc15_14TeV.600012.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.r12573_mc_trk_Akt4EMTo/*
+    ### Run Over Single File
+    #./d_ana ../data/user.khanov.mc15_14TeV.600012.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.r12573_mc_trk_Akt4EMTo/*
+    ### Run Over All Files
+    #./d_ana /mnt/shared/lvaughan/Pileup_ntuples/01_31_24/user.khanov.mc15_14TeV.600012.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.r12573_mc_trk_Akt4EMTo/user.khanov.37100851.Akt4EMTo._00000*.root
+    ./d_ana ./user.khanov.mc15_14TeV.600012.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.r12573_mc_trk_Akt4EMTo/user.khanov.37100851.Akt4EMTo._*.root
     mv refined.root refined_ttbar.root
     echo "Done Refining ttbar!"
 fi
