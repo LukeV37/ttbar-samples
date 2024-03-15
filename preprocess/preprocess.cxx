@@ -134,25 +134,43 @@ void preprocess(int type){
         for (int k=0;k<Jets.size();k++){
             rng = ((float) rand() / (float) RAND_MAX);  // Generate a (psuedo)random number between 0 and 1
             if (Jet_Score[k]<0.05){
-                if (rng<0.99) cut_labels.push_back(Jets[k]);
+                if (rng<0.9995) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.1){
-                if (rng<0.94) cut_labels.push_back(Jets[k]);
+                if (rng<0.995) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.15){
-                if (rng<0.85) cut_labels.push_back(Jets[k]);
+                if (rng<0.985) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.2){
-                if (rng<0.75) cut_labels.push_back(Jets[k]);
+                if (rng<0.97) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.25){
+                if (rng<0.95) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.3){
-                if (rng<0.7) cut_labels.push_back(Jets[k]);
+                if (rng<0.91) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.35){
-                if (rng<0.55) cut_labels.push_back(Jets[k]);
+                if (rng<0.90) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.40){
+                if (rng<0.85) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.45){
-                if (rng<0.35) cut_labels.push_back(Jets[k]);
+                if (rng<0.80) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.50){
+                if (rng<0.60) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.55){
+                if (rng<0.0) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.60){
+                if (rng<0.0) cut_labels.push_back(Jets[k]);
+            }
+            else if (Jet_Score[k]<0.65){
+                if (rng<0.0) cut_labels.push_back(Jets[k]);
             }
             else continue;
         }
@@ -297,6 +315,8 @@ void preprocess(int type){
     cout << "Train " << float(reduce(isTrain.begin(),isTrain.end())) / (float) isTrain.size() << endl;
     cout << "Test " << (float) reduce(isTest.begin(),isTest.end()) / (float) isTest.size() << endl;
     cout << "Kept " << (float) reduce(isKept.begin(),isKept.end()) / (float) isKept.size() << endl;
+
+    Jet_Score_AFTER_h->Draw();
 }
 
 // TO-DO:
