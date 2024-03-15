@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
   Long64_t nentries = mytree->GetEntries();
   d* t = new d(mytree); // all branches are set
 
-  TFile* fout = new TFile("a1.root","RECREATE");
+  TFile* fout = new TFile("refined.root","RECREATE");
   t->Loop();
   fout->Write();
   delete fout;
