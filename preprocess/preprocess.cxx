@@ -1,10 +1,17 @@
 #include <vector>
+#include <numeric>
 #include <iostream>
 #include <set>
 #include <time.h>
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
+#include <TFile.h>
+#include <TTree.h>
+#include <TString.h>
+#include <TH1D.h>
+
+using namespace std;
 
 void preprocess(int type){
     TString sample;
@@ -50,7 +57,9 @@ void preprocess(int type){
 
     // Read entries and store in c++ vectors for easy indexing
     Long64_t nentries = tree->GetEntries();
+    cout << "Reading Data into C++ Vectors" << endl;
     for (int i=0;i<nentries;i++){
+        if (i%100==0) cout << i << " / " << nentries << '\r'; cout.flush();
         tree->GetEntry(i);
         jet_label.push_back(j_label);
         trk_label.push_back(t_label);
@@ -88,7 +97,7 @@ void preprocess(int type){
 
 
     // Before looping through Dataset, first determine the total number of Events
-    for (int i=0;i<trk_label.size();i++){
+    for (int i=0;i<int(trk_label.size());i++){
         E.insert(Event_ID[i]);
     }
     int num_Events = E.size();
@@ -99,7 +108,9 @@ void preprocess(int type){
     int num_trk;                // Used to save the number of tracks per jet
 
 
+    cout << "\nBalancing Dataset" << endl;
     for(int i=0;i<num_Events;i++){
+        if (i%100==0) cout << i << " / " << num_Events << '\r'; cout.flush();
         E_start_idx = E_end_idx;                // At the beginning of the event pick up where the last event left off.
         E_current_ID = Event_ID[E_start_idx];   // Reset the current event ID after while loop breaks
         cut_labels.clear();                     // Reset the cut labels at the beginning of each event
@@ -117,7 +128,7 @@ void preprocess(int type){
             J.insert(jet_ID[j]);
         }
         Jets.assign(J.begin(),J.end());                 // Convert set to vector
-        for(int k=0;k<Jets.size();k++){                 // Loop through all jets in event
+        for(int k=0;k<int(Jets.size());k++){                 // Loop through all jets in event
             num_trk=0;                                  // Reset num_trk at the beginning of each jet
             Score=0;                                    // Reset score at the beginning of each jet
             for(int j=E_start_idx;j<E_end_idx;j++){     // Loop through all tracks
@@ -131,46 +142,46 @@ void preprocess(int type){
         }
 
         // Iterate through jets and cut jets with low score in order to balance the dataset
-        for (int k=0;k<Jets.size();k++){
+        for (int k=0;k<int(Jets.size());k++){
             rng = ((float) rand() / (float) RAND_MAX);  // Generate a (psuedo)random number between 0 and 1
             if (Jet_Score[k]<0.05){
-                if (rng<0.9995) cut_labels.push_back(Jets[k]);
+                if (rng<0.9992) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.1){
-                if (rng<0.995) cut_labels.push_back(Jets[k]);
+                if (rng<0.992) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.15){
-                if (rng<0.985) cut_labels.push_back(Jets[k]);
+                if (rng<0.98) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.2){
-                if (rng<0.97) cut_labels.push_back(Jets[k]);
+                if (rng<0.965) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.25){
                 if (rng<0.95) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.3){
-                if (rng<0.91) cut_labels.push_back(Jets[k]);
+                if (rng<0.95) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.35){
-                if (rng<0.90) cut_labels.push_back(Jets[k]);
+                if (rng<0.92) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.40){
-                if (rng<0.85) cut_labels.push_back(Jets[k]);
+                if (rng<0.90) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.45){
-                if (rng<0.80) cut_labels.push_back(Jets[k]);
+                if (rng<0.87) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.50){
-                if (rng<0.60) cut_labels.push_back(Jets[k]);
+                if (rng<0.72) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.55){
-                if (rng<0.0) cut_labels.push_back(Jets[k]);
+                if (rng<0.67) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.60){
-                if (rng<0.0) cut_labels.push_back(Jets[k]);
+                if (rng<0.35) cut_labels.push_back(Jets[k]);
             }
             else if (Jet_Score[k]<0.65){
-                if (rng<0.0) cut_labels.push_back(Jets[k]);
+                if (rng<0.30) cut_labels.push_back(Jets[k]);
             }
             else continue;
         }
@@ -184,6 +195,7 @@ void preprocess(int type){
     }
 
     // Now that the dataset has been balanced, we split into testing and training datasets
+    cout << "\nSplit Dataset into Test and Train" << endl;
     float split = 0.75;
     vector<int> Events;
     vector<int> TrainEvents;
@@ -192,14 +204,18 @@ void preprocess(int type){
     for(int i=0;i<split_idx;i++){
         TrainEvents.push_back(Events[i]);
     }
-    for(int i=0;i<trk_label.size();i++){
-        if (find(TrainEvents.begin(), TrainEvents.end(), Event_ID[i]) != TrainEvents.end() ){
+    int max_val = * max_element(TrainEvents.begin(), TrainEvents.end());
+    for(int i=0;i<int(trk_label.size());i++){
+        if (i%100==0) cout << i << " / " << trk_label.size() << '\r'; cout.flush();
+        //if (find(TrainEvents.begin(), TrainEvents.end(), Event_ID[i]) != TrainEvents.end() ){
+        if (Event_ID[i] <= max_val){
             isTrain[i] = 1;
         }
         else isTest[i] = 1;
     }
 
     // Now Write Required information back into root file
+    cout << "\nWriting Dataset to file" << endl;
     TFile output("output.root","recreate");
     TTree *t2 = new TTree("Data", "Balanced and Split Dataset");
     TTree *t3 = new TTree("train", "Balanced and Split Dataset for Training");
@@ -233,7 +249,8 @@ void preprocess(int type){
     t4->Branch("jet_ID", &j_ID);
     t4->Branch("Event_ID", &E_ID);
     
-    for(int i=0;i<trk_label.size();i++){
+    for(int i=0;i<int(trk_label.size());i++){
+        if (i%100==0) cout << i << " / " << trk_label.size() << '\r'; cout.flush();
         tree->GetEntry(i);
         Keep=isKept[i];
         Train=isTrain[i];
@@ -259,6 +276,7 @@ void preprocess(int type){
     /// The following is used for debugging ///
     ///////////////////////////////////////////
 
+    cout << "\nDebugging" << endl;
     // Recalulate Jet Score After Balancing
     E_start_idx=0;
     E_end_idx=0;
@@ -279,7 +297,7 @@ void preprocess(int type){
             J.insert(jet_ID[j]);
         }
         Jets.assign(J.begin(),J.end());
-        for(int k=0;k<Jets.size();k++){
+        for(int k=0;k<int(Jets.size());k++){
             num_trk=0;                
             Score=0;                 
             for(int j=E_start_idx;j<E_end_idx;j++){
@@ -295,7 +313,7 @@ void preprocess(int type){
     int score_before_balance=0;
     int score_after_balance=0;
     int num_kept=0;
-    for(int i=0;i<trk_label.size();i++){
+    for(int i=0;i<int(trk_label.size());i++){
         if(isKept[i]==1) num_kept++;
         if(trk_label[i]==0){
             score_before_balance++;
