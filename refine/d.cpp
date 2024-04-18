@@ -6,6 +6,9 @@
 #include <iostream>
 #include <cmath>
 #include <map>
+#include <set>
+#include <algorithm>
+
 using namespace std;
 
 void d::Loop()
@@ -18,11 +21,12 @@ void d::Loop()
   TH1F* h_z_good = (TH1F*)h_z_all->Clone("z_good");
 
   TH1* h_njet = new TH1F("njet","",100,0.,100.);
+  //TH1* h_njpv = new TH1F("num_jpv","",100,0.,100.);  // Lacking jet labels
+  TH1* h_ntpv = new TH1F("num_tpv","",100,0.,100.);
 
   int count[4] = {0};
 
-  // Initialize output file and output tree
-  TFile file("refined.root","recreate");
+  // Initialize output tree
   TTree *t1 = new TTree("Data", "Preprocessed Features and Labels");
 
   // Initialize feature vars, labels, and other info
@@ -63,6 +67,7 @@ void d::Loop()
 
     if (njet==0) continue;
 
+    vector<int> vertex_per_event;
     // Loop through jets
     for (int ijet = 0; ijet<njet; ++ijet) {
         // Store jet info
@@ -95,13 +100,15 @@ void d::Loop()
 
             // Store label info
             int imc = (*trk_mc_index)[jtr];  // I have no idea what imc is, but I trust sasha
-            if(imc<0){                       // Disregard "fake tracks" per sashas suggestion
+            if(imc<0){                       // Treat "fake tracks" as independent class per sashas suggestion
                 jet_label=-999;
                 trk_label=-999;
+                vertex_per_event.push_back(trk_label);
             }
             else{
                 jet_label = (*mc_puevent)[imc];  // jet label that defines jet vertex. -1=HS ; else=PU
                 trk_label = (*mc_putype)[imc];   // trk label that defines PU. 1=PU ; 0 = Not PU
+                vertex_per_event.push_back(trk_label);
             }
 
             trk_ID++;       // Increment trk_ID after each jet
@@ -127,8 +134,17 @@ void d::Loop()
             cout << ", puevent=" << (*mc_puevent)[imc] << ", putype=" << (*mc_putype)[imc];
             cout << endl;
         }
-    }   
+      }   
     }
+  set<int> vertices(vertex_per_event.begin(),vertex_per_event.end());
+  vector<int> unique_vertices;
+  unique_vertices.assign(vertices.begin(),vertices.end());
+  for (int i=0;i<unique_vertices.size();i++){
+    h_ntpv->Fill(std::count(vertex_per_event.begin(),vertex_per_event.end(),unique_vertices[i]));
+  }
+  vertex_per_event.clear();
+
   Event_ID++;
   }
+  h_ntpv->Write();
 }
